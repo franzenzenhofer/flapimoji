@@ -12,7 +12,7 @@
     box-sizing: border-box;
 }
 
-    body { margin: 0; background-color: #00f; }
+    body { margin: 0; overflow-y: hidden; background-color: #00f; }
     #grid { display: grid; gap: 1px; width: 100vw; height: 100vh; }
     .cell { width: 16px; height: 16px; display: flex; justify-content: center; align-items: center; }
 </style>
@@ -36,7 +36,7 @@
     const calculateGridSize = () => {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-        return { columns: Math.floor(vw / 17), rows: Math.floor(vh / 17) + 1 };
+        return { columns: Math.floor(vw / 17), rows: Math.floor(vh / 17) + 3 };
     };
     
     // Initial state
