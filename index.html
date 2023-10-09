@@ -16,7 +16,7 @@
     const calculateGridSize = () => {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-        return { columns: Math.floor(vw / 17), rows: Math.floor(vh / 17) };
+        return { columns: Math.floor(vw / 17), rows: Math.floor(vh / 17) + 1 };
     };
     
     // Initial state
@@ -32,14 +32,19 @@
         y: Math.max(0, Math.min(bird.y + (flap ? -1 : 1), gridSize.rows - 1))
     });
     
-// Generate and update towers
+// Initialize a variable to track horizontal distance to next tower
+let nextTowerDistance = 4;
+
 const updateTowers = (towers, gridSize, birdY) => {
   const updatedTowers = towers.filter(tower => tower.x >= 0).map(tower => ({ ...tower, x: tower.x - 1 }));
-  if (!towers.length || towers[towers.length - 1].x < gridSize.columns - 4) {
+  
+  // Randomly set the distance for the next tower to be created.
+  nextTowerDistance = Math.floor(Math.random() * 3) + 5;
+
+  if (!towers.length || towers[towers.length - 1].x < gridSize.columns - nextTowerDistance) {
     let gapPosition;
     if (birdY != null) {
-      // Generate a gap closer to the bird's current Y position, making it easier to pass through.
-      gapPosition = Math.max(4, Math.min(gridSize.rows - 4, birdY + Math.floor(Math.random() * 5) - 2));
+      gapPosition = Math.max(4, Math.min(gridSize.rows - 4, birdY + Math.floor(Math.random() * 7) - 3));
     } else {
       gapPosition = Math.floor(Math.random() * (gridSize.rows - 10)) + 5;
     }
