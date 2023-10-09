@@ -16,9 +16,22 @@
     #grid { display: grid; gap: 1px; width: 100vw; height: 100vh; }
     .cell { width: 16px; height: 16px; display: flex; justify-content: center; align-items: center; }
 </style>
+<style>
+    #tabToFlap {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2em;
+        z-index: 1000;
+        display: none;
+    }
+</style>
 </head>
 <body>
 <div id="grid"></div>
+<div id="tabToFlap">🇹​🇦​🇧​ 🇹​🇴​ 🇫​🇱​🇦​🇵</div>
+
 <script type="module">// Calculate grid size based on viewport size
     const calculateGridSize = () => {
         const vw = window.innerWidth;
@@ -102,6 +115,7 @@ const updateTowers = (towers, gridSize, birdY) => {
     const handleFlap = (fast = false) => {
         if (!gameStarted) {
             gameStarted = true;
+            document.getElementById('tabToFlap').style.display = 'none';  // Hide "TAB TO FLAP"
             gameLoop(currentState, true);
         } else {
             currentState = { ...currentState, bird: updateBird(currentState.bird, true, currentState.gridSize, fast) };
@@ -164,6 +178,12 @@ if (userChoice) {
     });
     
     render(initialState);
+
+    if (!gameStarted) {
+        document.getElementById('tabToFlap').style.display = 'block';
+    } else {
+        document.getElementById('tabToFlap').style.display = 'none';
+    }
     
 </script>
 </body>
