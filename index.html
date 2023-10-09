@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flapimoji - Emoji Flappy Bird</title>
+<style>
+    body { margin: 0; overflow: hidden; background-color: #00f; }
+    #grid { display: grid; gap: 1px; width: 100vw; height: 100vh; }
+    .cell { width: 16px; height: 16px; display: flex; justify-content: center; align-items: center; }
+</style>
+</head>
+<body>
+<div id="grid"></div>
+<script type="module">// Calculate grid size based on viewport size
+    const calculateGridSize = () => {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        return { columns: Math.floor(vw / 17), rows: Math.floor(vh / 17) };
+    };
+    
+    // Initial state
+    const initialState = {
+        bird: { x: 2, y: 10 },
+        towers: [],
+        gridSize: calculateGridSize()
+    };
+    
+    // Update bird's position
+    const updateBird = (bird, flap, gridSize, fast = false) => ({
+        x: bird.x,
+        y: Math.max(0, Math.min(bird.y + (flap ? -1 : 1), gridSize.rows - 1))
+    });
+    
+// Generate and update towers
+const updateTowers = (towers, gridSize, birdY) => {
+  const updatedTowers = towers.filter(tower => tower.x >= 0).map(tower => ({ ...tower, x: tower.x - 1 }));
+  if (!towers.length || towers[towers.length - 1].x < gridSize.columns - 4) {
+    let gapPosition;
+    if (birdY != null) {
+      // Generate a gap closer to the bird's current Y position, making it easier to pass through.
+      gapPosition = Math.max(4, Math.min(gridSize.rows - 4, birdY + Math.floor(Math.random() * 5) - 2));
+    } else {
+      gapPosition = Math.floor(Math.random() * (gridSize.rows - 10)) + 5;
+    }
+    updatedTowers.push({ x: gridSize.columns - 1, gapPosition });
+  }
+  return updatedTowers;
+};
+
+    // Check for collisions
+    const checkCollision = (bird, towers, gridSize) => 
+        bird.y < 0 || bird.y >= gridSize.rows ||
+        towers.some(tower => (
+            tower.x === bird.x &&
+            (bird.y <= tower.gapPosition - 3 || bird.y >= tower.gapPosition + 3)
+        ));
+    
+    // Render the game state
+    const render = (state) => {
+        const gridElement = document.getElementById('grid');
+        gridElement.style.gridTemplateColumns = `repeat(${state.gridSize.columns}, 16px)`;
+        gridElement.style.gridTemplateRows = `repeat(${state.gridSize.rows}, 16px)`;
+        gridElement.innerHTML = '';
+        Array.from({ length: state.gridSize.rows }, (_, rowIdx) =>
+            Array.from({ length: state.gridSize.columns }, (_, colIdx) => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                if (colIdx === state.bird.x && rowIdx === state.bird.y) {
+                    cell.innerText = '🐥';
+                } else if (state.towers.some(tower => 
+                    colIdx === tower.x && (rowIdx <= tower.gapPosition - 3 || rowIdx >= tower.gapPosition + 3)
+                )) {
+                    cell.innerText = '🟩';
+                } else {
+                    cell.innerText = '🟦';
+                }
+                gridElement.appendChild(cell);
+            })
+        );
+    };
+    
+    let gameStarted = false;
+    let currentState = {...initialState};
+    let gameLoopTimeout;
+    let lastTouchTime;
+    
+    const handleFlap = (fast = false) => {
+        if (!gameStarted) {
+            gameStarted = true;
+            gameLoop(currentState, true);
+        } else {
+            currentState = { ...currentState, bird: updateBird(currentState.bird, true, currentState.gridSize, fast) };
+        }
+    };
+    
+    const handleDrop = () => {
+        currentState = { ...currentState, bird: updateBird(currentState.bird, false, currentState.gridSize, true) };
+    };
+    
+    const gameLoop = (state, flap = false) => {
+        clearTimeout(gameLoopTimeout);
+        currentState = { ...state };
+        const updatedBird = updateBird(currentState.bird, flap, currentState.gridSize);
+  const updatedTowers = updateTowers(currentState.towers, currentState.gridSize, updatedBird.y);
+
+        if (!checkCollision(updatedBird, updatedTowers, currentState.gridSize)) {
+            render({ ...currentState, bird: updatedBird, towers: updatedTowers });
+            currentState = { ...currentState, bird: updatedBird, towers: updatedTowers };
+            gameLoopTimeout = setTimeout(() => gameLoop(currentState), 500);
+        } else {
+            render({ ...currentState, bird: updatedBird, towers: updatedTowers });
+            const userChoice = window.confirm("Game Over - Play Again?");
+if (userChoice) {
+  currentState = {...initialState};
+  gameStarted = false;
+  render(initialState);
+  clearTimeout(gameLoopTimeout);
+}
+
+        }
+    };
+    
+    document.body.addEventListener('click', () => handleFlap(true));
+    let touchStartTime = null;
+    let touchTimeout = null;
+    document.body.addEventListener('touchstart', (e) => {
+        touchStartTime = new Date().getTime();
+        touchTimeout = setTimeout(() => {
+            handleDescendStart();
+        }, 500);
+    });
+    document.body.addEventListener('touchend', (e) => {
+        const touchEndTime = new Date().getTime();
+        const touchLength = touchEndTime - touchStartTime;
+        if (touchLength < 500) {
+            handleFlap(true);
+        } else {
+            handleDescendStop();
+        }
+        clearTimeout(touchTimeout);
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.code === 'ArrowUp' || event.code === 'Space') {
+            handleFlap(true);
+        }
+        if (event.code === 'ArrowDown') {
+            handleDrop();
+        }
+    });
+    
+    render(initialState);
+    
+</script>
+</body>
+</html>
