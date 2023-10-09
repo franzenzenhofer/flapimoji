@@ -12,7 +12,7 @@
     box-sizing: border-box;
 }
 
-    body { margin: 0; overflow: hidden; background-color: #00f; }
+    body { margin: 0; background-color: #00f; }
     #grid { display: grid; gap: 1px; width: 100vw; height: 100vh; }
     .cell { width: 16px; height: 16px; display: flex; justify-content: center; align-items: center; }
 </style>
@@ -110,7 +110,7 @@ const updateTowers = (towers, gridSize, birdY) => {
     let gameStarted = false;
     let currentState = {...initialState};
     let gameLoopTimeout;
-    let lastTouchTime;
+
     
     const handleFlap = (fast = false) => {
         if (!gameStarted) {
@@ -147,35 +147,37 @@ if (userChoice) {
 }
 
         }
-    };
+    };    // Removed handleDescendStart and handleDescendStop functions
     
-    document.body.addEventListener('click', () => handleFlap(true));
-    let touchStartTime = null;
-    let touchTimeout = null;
-    document.body.addEventListener('touchstart', (e) => {
-        touchStartTime = new Date().getTime();
-        touchTimeout = setTimeout(() => {
-            handleDescendStart();
-        }, 500);
-    });
-    document.body.addEventListener('touchend', (e) => {
-        const touchEndTime = new Date().getTime();
-        const touchLength = touchEndTime - touchStartTime;
-        if (touchLength < 500) {
-            handleFlap(true);
-        } else {
-            handleDescendStop();
+    let lastTouchTime;
+    
+    const handleInteraction = (isMobile, fast = false) => {
+        if (isMobile && lastTouchTime) {
+            const currentTime = new Date().getTime();
+            if (currentTime - lastTouchTime < 500) {
+                return;  // Avoid mobile click collision
+            }
         }
-        clearTimeout(touchTimeout);
+        handleFlap(fast);
+        lastTouchTime = new Date().getTime();
+    };
+
+    // Updated event listener for clicks
+    document.body.addEventListener('click', () => handleInteraction(false, true));
+
+    // Updated event listener for touch events
+    document.body.addEventListener('touchstart', (e) => {
+        lastTouchTime = new Date().getTime();
+        handleInteraction(true, true);
     });
+
+    // Updated event listener for keyboard events
     document.addEventListener('keydown', (event) => {
         if (event.code === 'ArrowUp' || event.code === 'Space') {
-            handleFlap(true);
-        }
-        if (event.code === 'ArrowDown') {
-            handleDrop();
+            handleInteraction(false, true);
         }
     });
+
     
     render(initialState);
 
