@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Flapimoji - Emoji Flappy Bird</title>
 <style>
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
     body { margin: 0; overflow: hidden; background-color: #00f; }
     #grid { display: grid; gap: 1px; width: 100vw; height: 100vh; }
     .cell { width: 16px; height: 16px; display: flex; justify-content: center; align-items: center; }
@@ -21,10 +28,12 @@
     
     // Initial state
     const initialState = {
-        bird: { x: 2, y: 10 },
+        bird: { x: 3, y: Math.floor(window.innerHeight / 34) },
         towers: [],
         gridSize: calculateGridSize()
     };
+
+
     
     // Update bird's position
     const updateBird = (bird, flap, gridSize, fast = false) => ({
