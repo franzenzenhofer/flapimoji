@@ -222,7 +222,7 @@ const showStartUI = () => {
       // Increase score and speed up game if bird passes a tower
   if (updatedTowers.some(tower => tower.x === updatedBird.x)) {
     currentState.score++;
-    currentState.gameSpeed *= 0.97;
+    currentState.gameSpeed *= 0.95;
     currentState.gameSpeed = Math.ceil(currentState.gameSpeed);
    // console.log(`Speed updated to ${currentState.gameSpeed}`);
 
