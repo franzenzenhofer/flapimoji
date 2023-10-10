@@ -221,11 +221,12 @@ const updateTowers = (towers, gridSize, birdY) => {
 
     // Check for collisions
     const checkCollision = (bird, towers, gridSize) => 
-        bird.y < 0 || bird.y >= gridSize.rows ||
-        towers.some(tower => (
-            tower.x === bird.x &&
-            (bird.y <= tower.gapPosition - 3 || bird.y >= tower.gapPosition + 3)
-        ));
+    bird.y < 0 || bird.y >= gridSize.rows - 2 || // <-- Added the condition here
+    towers.some(tower => (
+        tower.x === bird.x &&
+        (bird.y <= tower.gapPosition - 3 || bird.y >= tower.gapPosition + 3)
+    ));
+
         const displayScore = (state, gridElement) => {
   const [hundredEmoji, tensEmoji, onesEmoji] = scoreToEmoji(state.score);
   const scoreRow = 2;
