@@ -28,4 +28,4 @@ self.addEventListener('fetch', (event) => {
 });
 
 //serviceworker 10 10 2023 
-//v 1
+//v 1343
