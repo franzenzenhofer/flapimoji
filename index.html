@@ -34,6 +34,11 @@
   
 
 <script type="module">
+
+    let autoPilot = false;
+    const checkURLParams = () => new URLSearchParams(window.location.search).get('autopilot') === 'true';
+    autoPilot = checkURLParams();
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/service-worker.js')
     .then((registration) => {
@@ -174,13 +179,15 @@ const showStartUI = () => {
         currentState = { ...currentState, bird: updateBird(currentState.bird, false, currentState.gridSize, true) };
     };
     const gameOver = () => {
+        let finalScoreEmojis = scoreToEmoji(currentState.score).join('');
+
   document.getElementById("gameOverOverlay").style.display = "block";
   document.getElementById("finalScore").innerText = finalScoreEmojis;
 
   if (navigator.share) {
   //  if(true) {
     document.getElementById("shareButton").addEventListener("click", function shareScore() {
-    const finalScoreEmojis = scoreToEmoji(currentState.score).join('');
+    finalScoreEmojis = scoreToEmoji(currentState.score).join('');
     navigator.share({
         title: "Flapimoji Score",
         text: `This is my 🐥 Flapimoji score: ${finalScoreEmojis}! Just wanted to impress you. 🥳💪🔥`,
@@ -206,6 +213,9 @@ const showStartUI = () => {
     const gameLoop = (state, flap = false) => {
         clearTimeout(gameLoopTimeout);
         currentState = { ...state };
+        if (autoPilot) {
+    autoPilotLogic();  // Call your autopilot logic here
+  }
         const updatedBird = updateBird(currentState.bird, flap, currentState.gridSize);
   const updatedTowers = updateTowers(currentState.towers, currentState.gridSize, updatedBird.y);
  if (!checkCollision(updatedBird, updatedTowers, currentState.gridSize)) {
@@ -260,6 +270,26 @@ const showStartUI = () => {
             handleInteraction(false, true);
         }
     });
+
+
+
+
+    const autoPilotLogic = () => {
+  const action = Math.random() < 0.8 ? 'flap' : 'drop';
+
+  if (action === 'flap') {
+    handleFlap(true);
+  } else {
+    handleDrop();
+  }
+};
+
+
+
+
+
+
+
 
     
     render(initialState);
