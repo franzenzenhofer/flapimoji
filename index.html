@@ -59,7 +59,7 @@ if ('serviceWorker' in navigator) {
     
 // Initial state
 const initialState = {
-  bird: { x: 3, y: Math.floor(window.innerHeight / 34) },
+  bird: { x: 3, y: Math.floor(window.innerHeight / 34), velocity: 0 },
   towers: [],
   gridSize: calculateGridSize(),
   score: 0,
@@ -75,11 +75,17 @@ const scoreToEmoji = score => {
 
 
     
-    // Update bird's position
-    const updateBird = (bird, flap, gridSize, fast = false) => ({
-        x: bird.x,
-        y: Math.max(0, Math.min(bird.y + (flap ? -1 : 1), gridSize.rows - 1))
-    });
+const updateBird = (bird, flap, gridSize, fast = false) => {
+    let newVelocity = bird.velocity;
+    if (flap) {
+        newVelocity = -1; // adjust this value based on how high you want the bird to go on a flap
+    } else {
+        newVelocity = Math.min(newVelocity + 1, 1); // gravity, pulls the bird down
+    }
+
+    const newY = Math.max(0, Math.min(bird.y + newVelocity, gridSize.rows - 1));
+    return { x: bird.x, y: newY, velocity: newVelocity };
+};
     
 // Initialize a variable to track horizontal distance to next tower
 let nextTowerDistance = 4;
