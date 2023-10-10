@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Flapimoji - Emoji Flappy Bird</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+
+
 <meta property="og:title" content="Flapimoji - Emoji Flappy Bird">
   <meta property="og:description" content="A fun and addictive game that combines the classic Flappy Bird gameplay with cute emoji graphics.">
   <meta property="og:image" content="https://flapimoji.franzai.com/show.jpeg">
@@ -76,26 +82,113 @@ html:after {
     pointer-events: none;  /* Add this line */
 }
 
+.overlay {
+    font-family: 'Courier New', monospace;
+    font-size: 1em;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    z-index: 10000;
+    box-shadow: inset 0 0 50px #00ff00;
+    border: 5px solid #00ff00;
+    border-radius: 25px;
+    text-align: center;
+    width: auto;
+    height: auto;
+    max-width: 90%;
+    max-height: 90%;
+    min-width: 80%;
+    max-height: 90%;
+    display: none;
+    
+}
+
+.actionbutton {
+    background: #00ff00;
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 0 5px #fff;
+    text-align: center;
+    width: 100%;
+}
+
+hr {
+    border: none;
+    border-top: 3px solid #00ff00;
+    width: 50%;
+    margin: 20px auto;
+}
+
+
+#msg {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+
 
 </style>
 </head>
 <body>
 <div id="grid"></div>
-<div id="tabToFlap">🇹​🇦​🇧​<br>🇹​🇴​<br>🇫​🇱​🇦​🇵</div>
+<div id="startOverlay" class="overlay"><br>
+    <div id="startText"></div><br>
+    <div id="startButton" class="actionbutton">▶️ Play ▶️</div>
+  </div>
+  <div id="gameOverOverlay" class="overlay">
+    <br>
+    <div id="gameOverText">🐥 Final Score: <span id="finalScore"></span> 🐥</div>
+    <hr>
+    <div id="shareButton">📣 <span id="msg">Share your 🐥 Flapimoji Score and Impress your Friends!</span> 😎👍🚀</div>
+    <br>
+    <div id="playAgainButton" class="actionbutton">🔄 Play Again 🔄</div>
+  </div>
+  
 
-<script type="module">// Calculate grid size based on viewport size
+<script type="module">
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js')
+    .then((registration) => {
+      console.log('Service Worker registered:', registration);
+    })
+    .catch((error) => {
+      console.log('Service Worker registration failed:', error);
+    });
+}
+
+
+// Calculate grid size based on viewport size
     const calculateGridSize = () => {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
         return { columns: Math.floor(vw / 17), rows: Math.floor(vh / 17) + 3 };
     };
     
-    // Initial state
-    const initialState = {
-        bird: { x: 3, y: Math.floor(window.innerHeight / 34) },
-        towers: [],
-        gridSize: calculateGridSize()
-    };
+// Initial state
+const initialState = {
+  bird: { x: 3, y: Math.floor(window.innerHeight / 34) },
+  towers: [],
+  gridSize: calculateGridSize(),
+  score: 0,
+  gameSpeed: 500
+};
+
+const scoreToEmoji = score => {
+  const d = {'0': '0️⃣', '1': '1️⃣', '2': '2️⃣', '3': '3️⃣', '4': '4️⃣', '5': '5️⃣', '6': '6️⃣', '7': '7️⃣', '8': '8️⃣', '9': '9️⃣'};
+  const scoreStr = String(score).padStart(3, '0');
+  return [...scoreStr].map(digit => d[digit]);
+};
+
 
 
     
@@ -133,7 +226,17 @@ const updateTowers = (towers, gridSize, birdY) => {
             tower.x === bird.x &&
             (bird.y <= tower.gapPosition - 3 || bird.y >= tower.gapPosition + 3)
         ));
-    
+        const displayScore = (state, gridElement) => {
+  const [hundredEmoji, tensEmoji, onesEmoji] = scoreToEmoji(state.score);
+  const scoreRow = 2;
+  const scoreColHundred = state.gridSize.columns - 4;
+  const scoreColTens = state.gridSize.columns - 3;
+  const scoreColOnes = state.gridSize.columns - 2;
+  gridElement.children[scoreRow * state.gridSize.columns + scoreColHundred].innerText = hundredEmoji;
+  gridElement.children[scoreRow * state.gridSize.columns + scoreColTens].innerText = tensEmoji;
+  gridElement.children[scoreRow * state.gridSize.columns + scoreColOnes].innerText = onesEmoji;
+};
+
     // Render the game state
     const render = (state) => {
         const gridElement = document.getElementById('grid');
@@ -156,6 +259,7 @@ const updateTowers = (towers, gridSize, birdY) => {
                 gridElement.appendChild(cell);
             })
         );
+        displayScore(state, gridElement);
     };
     
     let gameStarted = false;
@@ -164,38 +268,85 @@ const updateTowers = (towers, gridSize, birdY) => {
 
     
     const handleFlap = (fast = false) => {
-        if (!gameStarted) {
-            gameStarted = true;
-            document.getElementById('tabToFlap').style.display = 'none';  // Hide "TAB TO FLAP"
-            gameLoop(currentState, true);
-        } else {
-            currentState = { ...currentState, bird: updateBird(currentState.bird, true, currentState.gridSize, fast) };
-        }
-    };
+  if (!gameStarted) {
+    gameStarted = true;
+    document.getElementById('startOverlay').style.display = 'none'; // Hide "Start Overlay"
+    gameLoop(currentState, true);
+  } else {
+    currentState = { ...currentState, bird: updateBird(currentState.bird, true, currentState.gridSize, fast) };
+  }
+};
+
+const showStartUI = () => {
+  const startOverlay = document.getElementById('startOverlay');
+  const startText = document.getElementById('startText');
+  startText.innerHTML = 'Space to Flap';
+  startOverlay.style.display = 'flex';
+  if ('ontouchstart' in window) {
+    startText.innerHTML = 'Tap to Flap';
+  }
+  document.getElementById('startButton').addEventListener('click', () => {
+    handleFlap(true);
+  });
+};
+
     
     const handleDrop = () => {
         currentState = { ...currentState, bird: updateBird(currentState.bird, false, currentState.gridSize, true) };
     };
-    
+    const gameOver = () => {
+  document.getElementById("gameOverOverlay").style.display = "block";
+  const finalScoreEmojis = scoreToEmoji(currentState.score).join('');
+  document.getElementById("finalScore").innerText = finalScoreEmojis;
+
+  if (navigator.share) {
+  //  if(true) {
+    document.getElementById("shareButton").addEventListener("click", () => {
+      navigator.share({
+        title: "Flapimoji Score",
+        text: `Check out my Flapimoji score: ${finalScoreEmojis}!`,
+        url: "https://flapimoji.franzai.com/"
+      });
+    });
+  } else {
+    document.getElementById("shareButton").style.display = "none";
+  }
+
+  document.getElementById("playAgainButton").addEventListener("click", () => {
+    document.getElementById("gameOverOverlay").style.display = "none";
+    currentState = { ...initialState };
+    gameStarted = false;
+    render(initialState);
+    clearTimeout(gameLoopTimeout);
+  });
+};
+
+
     const gameLoop = (state, flap = false) => {
         clearTimeout(gameLoopTimeout);
         currentState = { ...state };
         const updatedBird = updateBird(currentState.bird, flap, currentState.gridSize);
   const updatedTowers = updateTowers(currentState.towers, currentState.gridSize, updatedBird.y);
+ if (!checkCollision(updatedBird, updatedTowers, currentState.gridSize)) {
+      // Increase score and speed up game if bird passes a tower
+  if (updatedTowers.some(tower => tower.x === updatedBird.x)) {
+    currentState.score++;
+    currentState.gameSpeed *= 0.99;
+    currentState.gameSpeed = Math.ceil(currentState.gameSpeed);
+   // console.log(`Speed updated to ${currentState.gameSpeed}`);
 
-        if (!checkCollision(updatedBird, updatedTowers, currentState.gridSize)) {
+  }
+  // Reset score if it reaches 100
+  if (currentState.score >= 100) {
+    currentState.score = 0;
+  }
+       
             render({ ...currentState, bird: updatedBird, towers: updatedTowers });
             currentState = { ...currentState, bird: updatedBird, towers: updatedTowers };
-            gameLoopTimeout = setTimeout(() => gameLoop(currentState), 500);
+            gameLoopTimeout = setTimeout(() => gameLoop(currentState), currentState.gameSpeed);
         } else {
-            render({ ...currentState, bird: updatedBird, towers: updatedTowers });
-            const userChoice = window.confirm("Game Over - Play Again?");
-if (userChoice) {
-  currentState = {...initialState};
-  gameStarted = false;
-  render(initialState);
-  clearTimeout(gameLoopTimeout);
-}
+            //render({ ...currentState, bird: updatedBird, towers: updatedTowers });
+            gameOver();
 
         }
     };    // Removed handleDescendStart and handleDescendStop functions
@@ -233,10 +384,9 @@ if (userChoice) {
     render(initialState);
 
     if (!gameStarted) {
-        document.getElementById('tabToFlap').style.display = 'block';
-    } else {
-        document.getElementById('tabToFlap').style.display = 'none';
-    }
+  showStartUI();
+}
+
     
 </script>
 </body>
