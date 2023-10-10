@@ -242,27 +242,20 @@ const showStartUI = () => {
         }
     };    // Removed handleDescendStart and handleDescendStop functions
     
-    let lastTouchTime;
-    
     const handleInteraction = (isMobile, fast = false) => {
-        if (isMobile && lastTouchTime) {
-            const currentTime = new Date().getTime();
-            if (currentTime - lastTouchTime < 500) {
-                return;  // Avoid mobile click collision
-            }
-        }
-        handleFlap(fast);
-        lastTouchTime = new Date().getTime();
-    };
+    handleFlap(fast);
+};
 
-    // Updated event listener for clicks
-    document.body.addEventListener('click', () => handleInteraction(false, true));
+// Updated event listener for clicks
+document.body.addEventListener('click', () => handleInteraction(false, true));
 
-    // Updated event listener for touch events
-    document.body.addEventListener('touchstart', (e) => {
-        lastTouchTime = new Date().getTime();
-        handleInteraction(true, true);
-    });
+// Updated event listener for touch events
+document.body.addEventListener('touchstart', (e) => {
+    e.preventDefault();  // Prevent triggering click event
+    handleInteraction(true, true);
+}, { passive: false });
+
+
 
     // Updated event listener for keyboard events
     document.addEventListener('keydown', (event) => {
