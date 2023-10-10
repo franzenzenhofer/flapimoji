@@ -187,7 +187,9 @@ const showStartUI = () => {
     const gameOver = () => {
         let finalScoreEmojis = scoreToEmoji(currentState.score).join('');
 
-  document.getElementById("gameOverOverlay").style.display = "block";
+setTimeout(() => {
+    document.getElementById("gameOverOverlay").style.display = "block";
+}, 300);
   document.getElementById("finalScore").innerText = finalScoreEmojis;
 
   if (navigator.share) {
