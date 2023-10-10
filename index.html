@@ -251,9 +251,12 @@ document.body.addEventListener('click', () => handleInteraction(false, true));
 
 // Updated event listener for touch events
 document.body.addEventListener('touchstart', (e) => {
-    e.preventDefault();  // Prevent triggering click event
-    handleInteraction(true, true);
+    if (e.target.closest('#grid')) {
+        e.preventDefault(); // Prevent triggering click event only if within #grid
+        handleInteraction(true, true);
+    }
 }, { passive: false });
+
 
 
 
